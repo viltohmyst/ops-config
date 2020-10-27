@@ -1,0 +1,88 @@
+{
+  "name": "ops-config",
+  "version": "0.0.0",
+  "description": "",
+  "main": "lib/cjs/index.js",
+  "module": "lib/esm/index.js",
+  "types": "lib/cjs/index.d.ts",
+  "bin": {
+    "command": "./bin/index.js"
+  },
+  "scripts": {
+    "lint": "eslint 'src/**/*?(.spec).{js,ts,tsx}' --quiet --fix",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig-cjs.json",
+    "start": "node -r ts-node/register src/index.ts",
+    "start:break": "node --inspect-brk -r ts-node/register src/index.ts",
+    "start:debug": "node --inspect -r ts-node/register src/index.ts",
+    "lib": "node lib/index.js",
+    "lib:break": "node --inspect-brk lib/index.js",
+    "lib:debug": "node --inspect lib/index.js",
+    "bin": "node -r ts-node/register bin/index.js",
+    "bin:break": "node --inspect-brk -r ts-node/register bin/index.js",
+    "bin:debug": "node --inspect -r ts-node/register bin/index.js",
+    "dev": "NODE_ENV=development node ./lib/index.js",
+    "test": "jest",
+    "ci:lintcheck": "eslint '*/**/*.{js,ts,tsx}' --quiet",
+    "ci:tscheck": "tsc --noEmit",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run lint",
+    "preversion": "npm run lint",
+    "version": "npm run lint && git add -A src",
+    "postversion": "git push && git push --tags"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/viltohmyst/ops-config.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "publishConfig": {
+    "access": "public"
+  },
+  "bugs": {
+    "url": "https://github.com/viltohmyst/ops-config/issues"
+  },
+  "homepage": "https://github.com/viltohmyst/ops-config#readme",
+  "files": [
+    "/lib",
+    "/bin"
+  ],
+  "devDependencies": {
+    "@types/jest": "^26.0.14",
+    "@typescript-eslint/eslint-plugin": "^4.4.0",
+    "@typescript-eslint/parser": "^4.4.0",
+    "eslint": "^7.10.0",
+    "eslint-config-prettier": "^6.12.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "husky": "^4.3.0",
+    "jest": "^26.5.2",
+    "prettier": "^2.1.2",
+    "ts-jest": "^26.4.1",
+    "ts-node": "^9.0.0",
+    "tsconfig-paths": "^3.9.0",
+    "typescript": "^4.0.3"
+  },
+  "dependencies": {
+    "@types/convict": "^5.2.1",
+    "@types/env-paths": "^2.1.0",
+    "@types/js-yaml": "^3.12.5",
+    "@types/node": "^14.11.5",
+    "convict": "^6.0.0",
+    "dotenv": "^8.2.0",
+    "env-paths": "^2.2.0",
+    "fast-glob": "^3.2.4",
+    "fs-extra": "^9.0.1",
+    "js-yaml": "^3.14.0",
+    "reflect-metadata": "^0.1.13"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint"
+    }
+  }
+}
