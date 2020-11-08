@@ -60,6 +60,11 @@ const schema = {
 };
 
 GoodConfig.init(schema);
-GoodConfig.loadFromPathPriority('config/config.yaml');
-const port = GoodConfig.get('port');
+try {
+  GoodConfig.loadFromPathPriority('config/config.yaml');
+  const port = GoodConfig.get('port');
+  console.log(port);
+} catch (error) {
+  console.log(GoodConfig.printableConfigPathPriority());
+}
 ```

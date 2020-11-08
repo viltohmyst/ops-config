@@ -145,15 +145,13 @@ export class GoodConfig {
 
   public static loadFromFile(configPath: string, dotenvPath?: string) {
     if (!GoodConfig.Instance.config) {
-      return Promise.reject(
-        new Error('init() must be called before loadFromFile'),
-      );
+      throw new Error('init() must be called before loadFromFile');
     }
 
     if (dotenvPath) {
       const result = dotenv({ path: dotenvPath });
       if (result.error) {
-        return Promise.reject(result.error);
+        throw result.error;
       }
       GoodConfig.Instance.config = convict(
         GoodConfig.Instance.schema as string | convict.Schema<unknown>,
@@ -167,12 +165,7 @@ export class GoodConfig {
     fs.accessSync(configPath, constants.F_OK);
     GoodConfig.Instance.config.loadFile(configPath);
 
-    try {
-      // Perform validation
-      GoodConfig.Instance.config.validate({ allowed: 'strict' });
-    } catch (error) {
-      return Promise.reject(error);
-    }
+    GoodConfig.Instance.config.validate({ allowed: 'strict' });
   }
 
   public static printableConfigPathPriority(): Array<string> {
@@ -216,9 +209,7 @@ export class GoodConfig {
     }
 
     if (!GoodConfig.Instance.config) {
-      return Promise.reject(
-        new Error('init() must be called before loadFromFile'),
-      );
+      throw new Error('init() must be called before loadFromFile');
     }
 
     if (dotenvArg) {
@@ -227,12 +218,12 @@ export class GoodConfig {
       ] = GoodConfig.Instance.dotenvPathPriority.generateSync();
 
       if (!dotenvPath) {
-        return Promise.reject(new Error('could not find dotenv' + dotenvArg));
+        throw new Error('could not find dotenv' + dotenvArg);
       }
 
       const result = dotenv({ path: dotenvPath });
       if (result.error) {
-        return Promise.reject(result.error);
+        throw result.error;
       }
       GoodConfig.Instance.config = convict(
         GoodConfig.Instance.schema as string | convict.Schema<unknown>,
@@ -246,17 +237,12 @@ export class GoodConfig {
     const [configPath] = GoodConfig.Instance.configPathPriority.generateSync();
 
     if (!configPath) {
-      return Promise.reject(new Error('could not find ' + configArg));
+      throw new Error('could not find ' + configArg);
     }
 
     GoodConfig.Instance.config.loadFile(configPath);
-
-    try {
-      // Perform validation
-      GoodConfig.Instance.config.validate({ allowed: 'strict' });
-    } catch (error) {
-      return Promise.reject(error);
-    }
+    // Perform validation
+    GoodConfig.Instance.config.validate({ allowed: 'strict' });
   }
 
   public static usePriorityPreset(preset: PathPriorityPreset) {

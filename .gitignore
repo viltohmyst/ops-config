@@ -105,6 +105,3 @@ dist
 
 # Compiled code
 lib/
-
-# Test assets
-test/
