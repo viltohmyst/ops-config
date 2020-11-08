@@ -1,4 +1,4 @@
-import { GoodConfig } from './index';
+import { OpsConfig } from './index';
 import tempy from 'tempy';
 import fs from 'fs';
 import * as root from 'app-root-path';
@@ -39,28 +39,28 @@ describe('PathPriorityBuilder', () => {
       console.error = errorMock;
 
       expect(() => {
-        GoodConfig.get('noValue');
+        OpsConfig.get('noValue');
       }).toThrow();
       expect(errorMock).toHaveBeenCalledTimes(0);
 
       expect(() => {
-        GoodConfig.init();
+        OpsConfig.init();
       }).toThrow();
       expect(errorMock).toHaveBeenCalledTimes(0);
 
-      GoodConfig.enableLogs(true);
+      OpsConfig.enableLogs(true);
 
       expect(() => {
-        GoodConfig.get('noValue');
+        OpsConfig.get('noValue');
       }).toThrow();
       expect(errorMock).toHaveBeenCalledTimes(1);
 
       expect(() => {
-        GoodConfig.init();
+        OpsConfig.init();
       }).toThrow();
       expect(errorMock).toHaveBeenCalledTimes(2);
 
-      GoodConfig.enableLogs(false);
+      OpsConfig.enableLogs(false);
       // eslint-disable-next-line no-global-assign
       console = originalConsole;
     });
@@ -72,63 +72,63 @@ describe('PathPriorityBuilder', () => {
       customLogger.debug = jest.fn();
       customLogger.error = jest.fn();
 
-      GoodConfig.setLogger(customLogger);
+      OpsConfig.setLogger(customLogger);
 
       expect(() => {
-        GoodConfig.get('noValue');
+        OpsConfig.get('noValue');
       }).toThrow();
       expect(customLogger.error).toHaveBeenCalledTimes(1);
 
       expect(() => {
-        GoodConfig.init();
+        OpsConfig.init();
       }).toThrow();
       expect(customLogger.error).toHaveBeenCalledTimes(2);
 
-      GoodConfig.setSchema(schema).init();
+      OpsConfig.setSchema(schema).init();
       expect(customLogger.debug).toHaveBeenCalledTimes(1);
 
-      GoodConfig.setLogger(console).enableLogs(false);
+      OpsConfig.setLogger(console).enableLogs(false);
     });
   });
 
   describe('loadFromFile', () => {
     it('should successfully load file if exists', () => {
-      GoodConfig.setSchema(schema).init();
-      GoodConfig.loadFromFile(configPath);
-      expect(GoodConfig.get('port')).toEqual(8080);
-      expect(GoodConfig.get('db').name).toEqual('users');
+      OpsConfig.setSchema(schema).init();
+      OpsConfig.loadFromFile(configPath);
+      expect(OpsConfig.get('port')).toEqual(8080);
+      expect(OpsConfig.get('db').name).toEqual('users');
     });
     it('should use env value before default', () => {
       process.env.PORT = '6060';
-      GoodConfig.init(schema);
-      GoodConfig.loadFromFile(configPath);
-      expect(GoodConfig.get('port')).toEqual(6060);
+      OpsConfig.init(schema);
+      OpsConfig.loadFromFile(configPath);
+      expect(OpsConfig.get('port')).toEqual(6060);
     });
     it('should use dotenv value before default and after env', () => {
       process.env.PORT = '6060';
-      GoodConfig.init(schema);
-      GoodConfig.loadFromFile(configPath, dotenvPath);
-      expect(GoodConfig.get('db.host')).toEqual('dotenv');
-      expect(GoodConfig.get('port')).toEqual(6060);
+      OpsConfig.init(schema);
+      OpsConfig.loadFromFile(configPath, dotenvPath);
+      expect(OpsConfig.get('db.host')).toEqual('dotenv');
+      expect(OpsConfig.get('port')).toEqual(6060);
     });
 
     it('should use new env values if env args is set, priority is : envArgs > env > dotenv > fileValue > defaultValue', () => {
       process.env.PORT = '6060';
-      GoodConfig.setEnvs({ PORT: '2020' });
-      GoodConfig.init(schema);
-      GoodConfig.loadFromFile(configPath, dotenvPath);
-      expect(GoodConfig.get('port')).toEqual(2020);
-      GoodConfig.clearEnvs();
+      OpsConfig.setEnvs({ PORT: '2020' });
+      OpsConfig.init(schema);
+      OpsConfig.loadFromFile(configPath, dotenvPath);
+      expect(OpsConfig.get('port')).toEqual(2020);
+      OpsConfig.clearEnvs();
     });
 
     it('should use new env values if env args is set, priority is : commandArgs > envArgs', () => {
       process.env.PORT = '6060';
-      GoodConfig.setEnvs({ PORT: '2020' });
-      GoodConfig.setArgs({ port: '1010' });
-      GoodConfig.init(schema);
-      GoodConfig.loadFromFile(configPath, dotenvPath);
-      expect(GoodConfig.get('port')).toEqual(1010);
-      GoodConfig.clearArgs().clearEnvs();
+      OpsConfig.setEnvs({ PORT: '2020' });
+      OpsConfig.setArgs({ port: '1010' });
+      OpsConfig.init(schema);
+      OpsConfig.loadFromFile(configPath, dotenvPath);
+      expect(OpsConfig.get('port')).toEqual(1010);
+      OpsConfig.clearArgs().clearEnvs();
     });
   });
 
@@ -136,62 +136,62 @@ describe('PathPriorityBuilder', () => {
     it('should successfully load file if exists', () => {
       process.env.PORT = '8080';
       process.env.NODE_ENV = 'development';
-      GoodConfig.init(schema);
-      GoodConfig.loadFromPathPriority('test/config.yaml');
-      expect(GoodConfig.get('port')).toEqual(8080);
-      expect(GoodConfig.get('db').name).toEqual('users');
-      GoodConfig.loadFromPathPriority('test/config.yaml', 'test/.env');
-      expect(GoodConfig.get('port')).toEqual(8080);
-      expect(GoodConfig.get('db.host')).toEqual('dotenv');
+      OpsConfig.init(schema);
+      OpsConfig.loadFromPathPriority('test/config.yaml');
+      expect(OpsConfig.get('port')).toEqual(8080);
+      expect(OpsConfig.get('db').name).toEqual('users');
+      OpsConfig.loadFromPathPriority('test/config.yaml', 'test/.env');
+      expect(OpsConfig.get('port')).toEqual(8080);
+      expect(OpsConfig.get('db.host')).toEqual('dotenv');
     });
 
     it('using server preset, should successfully load file if exists', () => {
       process.env.PORT = '8080';
       process.env.NODE_ENV = 'development';
-      GoodConfig.init(schema);
-      GoodConfig.usePriorityPreset('server');
-      GoodConfig.loadFromPathPriority('test/config.yaml');
-      expect(GoodConfig.get('port')).toEqual(8080);
-      expect(GoodConfig.get('db').name).toEqual('users');
-      GoodConfig.loadFromPathPriority('test/config.yaml', 'test/.env');
-      expect(GoodConfig.get('port')).toEqual(8080);
-      expect(GoodConfig.get('db.host')).toEqual('dotenv');
+      OpsConfig.init(schema);
+      OpsConfig.usePriorityPreset('server');
+      OpsConfig.loadFromPathPriority('test/config.yaml');
+      expect(OpsConfig.get('port')).toEqual(8080);
+      expect(OpsConfig.get('db').name).toEqual('users');
+      OpsConfig.loadFromPathPriority('test/config.yaml', 'test/.env');
+      expect(OpsConfig.get('port')).toEqual(8080);
+      expect(OpsConfig.get('db.host')).toEqual('dotenv');
     });
 
     it('using custom Path Priority, should successfully load file if exists', () => {
       process.env.PORT = '8080';
       process.env.NODE_ENV = 'development';
-      GoodConfig.init(schema);
+      OpsConfig.init(schema);
       const customPathPriority = new PathPriorityBuilderSync()
         .findPaths('test/config.yaml')
         .appRoot();
       const customDotenv = new PathPriorityBuilderSync()
         .findPaths('test/.env')
         .appRoot();
-      GoodConfig.loadFromPathPriority(customPathPriority);
-      expect(GoodConfig.get('port')).toEqual(8080);
-      expect(GoodConfig.get('db').name).toEqual('users');
-      GoodConfig.loadFromPathPriority(customPathPriority, customDotenv);
-      expect(GoodConfig.get('port')).toEqual(8080);
-      expect(GoodConfig.get('db.host')).toEqual('dotenv');
+      OpsConfig.loadFromPathPriority(customPathPriority);
+      expect(OpsConfig.get('port')).toEqual(8080);
+      expect(OpsConfig.get('db').name).toEqual('users');
+      OpsConfig.loadFromPathPriority(customPathPriority, customDotenv);
+      expect(OpsConfig.get('port')).toEqual(8080);
+      expect(OpsConfig.get('db.host')).toEqual('dotenv');
     });
 
     it('should throw error if config not found', () => {
       process.env.PORT = '8080';
       process.env.NODE_ENV = 'development';
-      GoodConfig.init(schema);
+      OpsConfig.init(schema);
       const customPathPriority = new PathPriorityBuilderSync()
         .findPaths('testnot/config.yaml')
         .appRoot();
 
       try {
-        GoodConfig.loadFromFile('testnot/config.yaml');
+        OpsConfig.loadFromFile('testnot/config.yaml');
       } catch (error) {
         expect(error).toBeDefined();
       }
 
       try {
-        GoodConfig.loadFromPathPriority(customPathPriority);
+        OpsConfig.loadFromPathPriority(customPathPriority);
       } catch (error) {
         expect(error).toBeInstanceOf(Error);
       }
@@ -200,7 +200,7 @@ describe('PathPriorityBuilder', () => {
     it('should throw error if .env not found', () => {
       process.env.PORT = '8080';
       process.env.NODE_ENV = 'development';
-      GoodConfig.init(schema);
+      OpsConfig.init(schema);
       const customPathPriority = new PathPriorityBuilderSync()
         .findPaths('test/config.yaml')
         .appRoot();
@@ -209,13 +209,13 @@ describe('PathPriorityBuilder', () => {
         .appRoot();
 
       try {
-        GoodConfig.loadFromFile('test/config.yaml', 'testnot/.env');
+        OpsConfig.loadFromFile('test/config.yaml', 'testnot/.env');
       } catch (error) {
         expect(error).toBeDefined();
       }
 
       try {
-        GoodConfig.loadFromPathPriority(customPathPriority, customDotenv);
+        OpsConfig.loadFromPathPriority(customPathPriority, customDotenv);
       } catch (error) {
         expect(error).toBeInstanceOf(Error);
       }

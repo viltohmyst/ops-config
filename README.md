@@ -1,4 +1,4 @@
-# GoodConfig
+# OpsConfig
 
 Easy to use config module with good defaults. Comes with everything you need.
 
@@ -15,15 +15,15 @@ Easy to use config module with good defaults. Comes with everything you need.
 ## Install
 
 ```bash
-npm install good-config # already includes typescript definitions
+npm install ops-config # already includes typescript definitions
 ```
 
 ## Usage
 
 ```typescript
-import { GoodConfig } from 'good-config';
+import { OpsConfig } from 'ops-config';
 
-// under the hood GoodConfig uses node-convict and thus uses it's schema standard
+// under the hood OpsConfig uses node-convict and thus uses it's schema standard
 const schema = {
   env: {
     doc: 'The application environment.',
@@ -59,12 +59,12 @@ const schema = {
   },
 };
 
-GoodConfig.init(schema);
+OpsConfig.init(schema);
 try {
-  GoodConfig.loadFromPathPriority('config/config.yaml');
-  const port = GoodConfig.get('port');
+  OpsConfig.loadFromPathPriority('config/config.yaml');
+  const port = OpsConfig.get('port');
   console.log(port);
 } catch (error) {
-  console.log(GoodConfig.printableConfigPathPriority());
+  console.log(OpsConfig.printableConfigPathPriority());
 }
 ```

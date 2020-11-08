@@ -26,8 +26,8 @@ interface Logger {
 
 type PathPriorityPreset = 'cli' | 'server';
 
-export class GoodConfig {
-  private static _instance: GoodConfig;
+export class OpsConfig {
+  private static _instance: OpsConfig;
 
   private config: convict.Config<unknown> | undefined;
 
@@ -63,8 +63,8 @@ export class GoodConfig {
   }
 
   private static get log() {
-    if (GoodConfig.Instance.enableLog) {
-      return GoodConfig.Instance._log;
+    if (OpsConfig.Instance.enableLog) {
+      return OpsConfig.Instance._log;
     } else {
       return {
         info: (...args: Array<any>): void => {},
@@ -76,18 +76,18 @@ export class GoodConfig {
   }
 
   public static setLogger(logger: Logger) {
-    GoodConfig.Instance._log = logger;
-    GoodConfig.Instance.enableLog = true;
+    OpsConfig.Instance._log = logger;
+    OpsConfig.Instance.enableLog = true;
     return this;
   }
 
   public static enableLogs(enable: boolean) {
-    GoodConfig.Instance.enableLog = enable;
+    OpsConfig.Instance.enableLog = enable;
     return this;
   }
 
   public static setSchema(schema: string | convict.Schema<unknown>) {
-    GoodConfig.Instance.schema = schema;
+    OpsConfig.Instance.schema = schema;
     return this;
   }
 
@@ -97,22 +97,22 @@ export class GoodConfig {
     argsKeys.forEach((key) => {
       formattedArgs.push(`--${key}`, args[key]);
     });
-    GoodConfig.Instance.args = formattedArgs;
+    OpsConfig.Instance.args = formattedArgs;
     return this;
   }
 
   public static clearArgs() {
-    delete GoodConfig.Instance.args;
+    delete OpsConfig.Instance.args;
     return this;
   }
 
   public static setEnvs(envs: { [key: string]: string }) {
-    GoodConfig.Instance.envs = envs;
+    OpsConfig.Instance.envs = envs;
     return this;
   }
 
   public static clearEnvs() {
-    delete GoodConfig.Instance.envs;
+    delete OpsConfig.Instance.envs;
     return this;
   }
 
@@ -121,30 +121,30 @@ export class GoodConfig {
     envs?: { [key: string]: string },
     args?: Array<string>,
   ): void | never {
-    GoodConfig.Instance.schema = schema || GoodConfig.Instance.schema;
-    GoodConfig.Instance.args = args || GoodConfig.Instance.args;
-    GoodConfig.Instance.envs = envs || GoodConfig.Instance.envs;
-    if (GoodConfig.Instance.schema) {
-      GoodConfig.Instance.config = convict(GoodConfig.Instance.schema, {
-        env: GoodConfig.Instance.envs,
-        args: GoodConfig.Instance.args,
+    OpsConfig.Instance.schema = schema || OpsConfig.Instance.schema;
+    OpsConfig.Instance.args = args || OpsConfig.Instance.args;
+    OpsConfig.Instance.envs = envs || OpsConfig.Instance.envs;
+    if (OpsConfig.Instance.schema) {
+      OpsConfig.Instance.config = convict(OpsConfig.Instance.schema, {
+        env: OpsConfig.Instance.envs,
+        args: OpsConfig.Instance.args,
       });
-      GoodConfig.log.debug(
+      OpsConfig.log.debug(
         'Successfully initialized config with :',
-        GoodConfig.Instance.schema,
-        GoodConfig.Instance.envs,
-        GoodConfig.Instance.args,
+        OpsConfig.Instance.schema,
+        OpsConfig.Instance.envs,
+        OpsConfig.Instance.args,
       );
     } else {
       const errorMessage =
         'setSchema(schema) must be called before invoking init()';
-      GoodConfig.log.error(errorMessage);
+      OpsConfig.log.error(errorMessage);
       throw new Error(errorMessage);
     }
   }
 
   public static loadFromFile(configPath: string, dotenvPath?: string) {
-    if (!GoodConfig.Instance.config) {
+    if (!OpsConfig.Instance.config) {
       throw new Error('init() must be called before loadFromFile');
     }
 
@@ -153,27 +153,27 @@ export class GoodConfig {
       if (result.error) {
         throw result.error;
       }
-      GoodConfig.Instance.config = convict(
-        GoodConfig.Instance.schema as string | convict.Schema<unknown>,
+      OpsConfig.Instance.config = convict(
+        OpsConfig.Instance.schema as string | convict.Schema<unknown>,
         {
-          env: GoodConfig.Instance.envs,
-          args: GoodConfig.Instance.args,
+          env: OpsConfig.Instance.envs,
+          args: OpsConfig.Instance.args,
         },
       );
     }
 
     fs.accessSync(configPath, constants.F_OK);
-    GoodConfig.Instance.config.loadFile(configPath);
+    OpsConfig.Instance.config.loadFile(configPath);
 
-    GoodConfig.Instance.config.validate({ allowed: 'strict' });
+    OpsConfig.Instance.config.validate({ allowed: 'strict' });
   }
 
   public static printableConfigPathPriority(): Array<string> {
-    return GoodConfig.Instance.configPathPriority.printPriorities();
+    return OpsConfig.Instance.configPathPriority.printPriorities();
   }
 
   public static printableDotenvPathPriority(): Array<string> {
-    return GoodConfig.Instance.dotenvPathPriority.printPriorities();
+    return OpsConfig.Instance.dotenvPathPriority.printPriorities();
   }
 
   public static loadFromPathPriority(
@@ -181,41 +181,39 @@ export class GoodConfig {
     dotenvArg?: string | PathPriorityBuilderSync,
   ) {
     if (typeof configArg === 'string') {
-      if (GoodConfig.Instance.preset === 'cli') {
-        GoodConfig.Instance.configPathPriority = new PathPriorityBuilderSync().useCliPreset(
+      if (OpsConfig.Instance.preset === 'cli') {
+        OpsConfig.Instance.configPathPriority = new PathPriorityBuilderSync().useCliPreset(
           configArg,
         );
-      } else if (GoodConfig.Instance.preset === 'server') {
-        GoodConfig.Instance.configPathPriority = new PathPriorityBuilderSync().useServerPreset(
+      } else if (OpsConfig.Instance.preset === 'server') {
+        OpsConfig.Instance.configPathPriority = new PathPriorityBuilderSync().useServerPreset(
           configArg,
         );
       }
     } else if (configArg instanceof PathPriorityBuilderSync) {
-      GoodConfig.Instance.configPathPriority = configArg;
+      OpsConfig.Instance.configPathPriority = configArg;
     }
 
     if (typeof dotenvArg === 'string') {
-      if (GoodConfig.Instance.preset === 'cli') {
-        GoodConfig.Instance.dotenvPathPriority = new PathPriorityBuilderSync().useCliPreset(
+      if (OpsConfig.Instance.preset === 'cli') {
+        OpsConfig.Instance.dotenvPathPriority = new PathPriorityBuilderSync().useCliPreset(
           dotenvArg,
         );
-      } else if (GoodConfig.Instance.preset === 'server') {
-        GoodConfig.Instance.dotenvPathPriority = new PathPriorityBuilderSync().useServerPreset(
+      } else if (OpsConfig.Instance.preset === 'server') {
+        OpsConfig.Instance.dotenvPathPriority = new PathPriorityBuilderSync().useServerPreset(
           dotenvArg,
         );
       }
     } else if (dotenvArg instanceof PathPriorityBuilderSync) {
-      GoodConfig.Instance.dotenvPathPriority = dotenvArg;
+      OpsConfig.Instance.dotenvPathPriority = dotenvArg;
     }
 
-    if (!GoodConfig.Instance.config) {
+    if (!OpsConfig.Instance.config) {
       throw new Error('init() must be called before loadFromFile');
     }
 
     if (dotenvArg) {
-      const [
-        dotenvPath,
-      ] = GoodConfig.Instance.dotenvPathPriority.generateSync();
+      const [dotenvPath] = OpsConfig.Instance.dotenvPathPriority.generateSync();
 
       if (!dotenvPath) {
         throw new Error('could not find dotenv' + dotenvArg);
@@ -225,40 +223,40 @@ export class GoodConfig {
       if (result.error) {
         throw result.error;
       }
-      GoodConfig.Instance.config = convict(
-        GoodConfig.Instance.schema as string | convict.Schema<unknown>,
+      OpsConfig.Instance.config = convict(
+        OpsConfig.Instance.schema as string | convict.Schema<unknown>,
         {
-          env: GoodConfig.Instance.envs,
-          args: GoodConfig.Instance.args,
+          env: OpsConfig.Instance.envs,
+          args: OpsConfig.Instance.args,
         },
       );
     }
 
-    const [configPath] = GoodConfig.Instance.configPathPriority.generateSync();
+    const [configPath] = OpsConfig.Instance.configPathPriority.generateSync();
 
     if (!configPath) {
       throw new Error('could not find ' + configArg);
     }
 
-    GoodConfig.Instance.config.loadFile(configPath);
+    OpsConfig.Instance.config.loadFile(configPath);
     // Perform validation
-    GoodConfig.Instance.config.validate({ allowed: 'strict' });
+    OpsConfig.Instance.config.validate({ allowed: 'strict' });
   }
 
   public static usePriorityPreset(preset: PathPriorityPreset) {
-    GoodConfig.Instance.preset = preset;
+    OpsConfig.Instance.preset = preset;
     return this;
   }
 
   public static get<T>(
     ...args: GetParameterType<T>
   ): GetReturnType<T> | any | never {
-    if (GoodConfig.Instance.config) {
-      return GoodConfig.Instance.config.get(...args);
+    if (OpsConfig.Instance.config) {
+      return OpsConfig.Instance.config.get(...args);
     } else {
       const errorMessage =
         'setSchema(schema) and init() must first be called before using a get(key) method';
-      GoodConfig.log.error(errorMessage);
+      OpsConfig.log.error(errorMessage);
       throw new Error(errorMessage);
     }
   }
