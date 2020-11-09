@@ -119,6 +119,10 @@ describe('PathPriorityBuilder', () => {
       OpsConfig.loadFromFile(configPath, dotenvPath);
       expect(OpsConfig.get('port')).toEqual(2020);
       OpsConfig.clearEnvs();
+      OpsConfig.init(schema, undefined, { PORT: '2020' });
+      OpsConfig.loadFromFile(configPath, dotenvPath);
+      expect(OpsConfig.get('port')).toEqual(2020);
+      OpsConfig.clearEnvs();
     });
 
     it('should use new env values if env args is set, priority is : commandArgs > envArgs', () => {
@@ -126,6 +130,14 @@ describe('PathPriorityBuilder', () => {
       OpsConfig.setEnvs({ PORT: '2020' });
       OpsConfig.setArgs({ port: '1010' });
       OpsConfig.init(schema);
+      OpsConfig.loadFromFile(configPath, dotenvPath);
+      expect(OpsConfig.get('port')).toEqual(1010);
+      OpsConfig.clearArgs().clearEnvs();
+      OpsConfig.init(
+        schema,
+        { port: '1010', non: undefined },
+        { PORT: '2020', non: undefined },
+      );
       OpsConfig.loadFromFile(configPath, dotenvPath);
       expect(OpsConfig.get('port')).toEqual(1010);
       OpsConfig.clearArgs().clearEnvs();

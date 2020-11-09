@@ -91,11 +91,13 @@ export class OpsConfig {
     return this;
   }
 
-  public static setArgs(args: { [key: string]: string }) {
+  public static setArgs(args: { [key: string]: string | undefined }) {
     const argsKeys = Object.keys(args);
     const formattedArgs: Array<string> = [];
     argsKeys.forEach((key) => {
-      formattedArgs.push(`--${key}`, args[key]);
+      if (args[key]) {
+        formattedArgs.push(`--${key}`, args[key] as string);
+      }
     });
     OpsConfig.Instance.args = formattedArgs;
     return this;
@@ -106,8 +108,13 @@ export class OpsConfig {
     return this;
   }
 
-  public static setEnvs(envs: { [key: string]: string }) {
-    OpsConfig.Instance.envs = envs;
+  public static setEnvs(envs: { [key: string]: string | undefined }) {
+    const newObject = Object.keys(envs).reduce((acc: any, key) => {
+      const _acc = acc;
+      if (envs[key] !== undefined) _acc[key] = envs[key];
+      return _acc;
+    }, {});
+    OpsConfig.Instance.envs = newObject;
     return this;
   }
 
@@ -118,12 +125,12 @@ export class OpsConfig {
 
   public static init(
     schema?: string | convict.Schema<unknown>,
-    envs?: { [key: string]: string },
-    args?: Array<string>,
+    args?: { [key: string]: string | undefined },
+    envs?: { [key: string]: string | undefined },
   ): void | never {
     OpsConfig.Instance.schema = schema || OpsConfig.Instance.schema;
-    OpsConfig.Instance.args = args || OpsConfig.Instance.args;
-    OpsConfig.Instance.envs = envs || OpsConfig.Instance.envs;
+    args !== undefined ? OpsConfig.setArgs(args) : null;
+    envs !== undefined ? OpsConfig.setEnvs(envs) : null;
     if (OpsConfig.Instance.schema) {
       OpsConfig.Instance.config = convict(OpsConfig.Instance.schema, {
         env: OpsConfig.Instance.envs,
