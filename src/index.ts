@@ -91,12 +91,14 @@ export class OpsConfig {
     return this;
   }
 
-  public static setArgs(args: { [key: string]: string | undefined }) {
+  public static setArgs(args: {
+    [key: string]: string | boolean | number | undefined;
+  }) {
     const argsKeys = Object.keys(args);
     const formattedArgs: Array<string> = [];
     argsKeys.forEach((key) => {
-      if (args[key]) {
-        formattedArgs.push(`--${key}`, args[key] as string);
+      if (args[key] !== undefined && args[key] !== null) {
+        formattedArgs.push(`--${key}`, String(args[key]));
       }
     });
     OpsConfig.Instance.args = formattedArgs;
@@ -223,7 +225,7 @@ export class OpsConfig {
       const [dotenvPath] = OpsConfig.Instance.dotenvPathPriority.generateSync();
 
       if (!dotenvPath) {
-        throw new Error('could not find dotenv' + dotenvArg);
+        throw new Error('could not find dotenv ' + dotenvArg);
       }
 
       const result = dotenv({ path: dotenvPath });

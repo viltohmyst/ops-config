@@ -142,6 +142,30 @@ describe('PathPriorityBuilder', () => {
       expect(OpsConfig.get('port')).toEqual(1010);
       OpsConfig.clearArgs().clearEnvs();
     });
+
+    it('should use correct types for args', () => {
+      OpsConfig.setArgs({
+        boolFalse: false,
+        boolTrue: true,
+        numberType: 6,
+        stringType: 'string',
+      });
+      OpsConfig.init(schema);
+      OpsConfig.loadFromFile(configPath, dotenvPath);
+      expect(OpsConfig.get('stringType')).toEqual('string');
+      expect(OpsConfig.get('numberType')).toEqual(6);
+      expect(OpsConfig.get('boolFalse')).toEqual(false);
+      expect(OpsConfig.get('boolTrue')).toEqual(true);
+      OpsConfig.clearArgs().clearEnvs();
+      OpsConfig.init(
+        schema,
+        { port: '1010', non: undefined },
+        { PORT: '2020', non: undefined },
+      );
+      OpsConfig.loadFromFile(configPath, dotenvPath);
+      expect(OpsConfig.get('port')).toEqual(1010);
+      OpsConfig.clearArgs().clearEnvs();
+    });
   });
 
   describe('loadFromPathPriority', () => {
