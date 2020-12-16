@@ -177,11 +177,11 @@ export class OpsConfig {
     OpsConfig.Instance.config.validate({ allowed: 'strict' });
   }
 
-  public static printableConfigPathPriority(): Array<string> {
+  public static printableConfigPathPriority() {
     return OpsConfig.Instance.configPathPriority.printPriorities();
   }
 
-  public static printableDotenvPathPriority(): Array<string> {
+  public static printableDotenvPathPriority() {
     return OpsConfig.Instance.dotenvPathPriority.printPriorities();
   }
 
