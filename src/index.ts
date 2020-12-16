@@ -185,6 +185,14 @@ export class OpsConfig {
     return OpsConfig.Instance.dotenvPathPriority.printPriorities();
   }
 
+  public static printSchema() {
+    return OpsConfig.Instance.config?.getSchemaString();
+  }
+
+  public static printValues() {
+    return OpsConfig.Instance.config?.toString();
+  }
+
   public static loadFromPathPriority(
     configArg: string | PathPriorityBuilderSync,
     dotenvArg?: string | PathPriorityBuilderSync,
