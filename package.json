@@ -79,7 +79,7 @@
     "fast-glob": "^3.2.4",
     "fs-extra": "^9.0.1",
     "js-yaml": "^3.14.0",
-    "path-priority": "^0.5.1",
+    "path-priority": "^0.6.2",
     "reflect-metadata": "^0.1.13"
   },
   "jest": {
