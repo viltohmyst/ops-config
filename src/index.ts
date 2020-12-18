@@ -5,12 +5,23 @@
 import { config as dotenv } from 'dotenv';
 import convict, { Config } from 'convict';
 import yaml from 'js-yaml';
-import { PathPriorityBuilderSync } from 'path-priority';
+import { PathPriorityBuilderSync, PrintFormat } from 'path-priority';
 import 'path-priority/lib/cjs/presets';
-import fs from 'fs';
-import { constants } from 'fs';
+import fs, { constants } from 'fs';
+import * as fsextra from 'fs-extra';
 import convict_format_with_validator from 'convict-format-with-validator';
 import convict_format_with_moment from 'convict-format-with-moment';
+
+export class FileNotFoundError extends Error {
+  constructor(private _searchPaths: Array<PrintFormat>, message?: string) {
+    super(message); // 'Error' breaks prototype chain here
+    Object.setPrototypeOf(this, new.target.prototype); // restore prototype chain
+  }
+
+  public get searchPaths() {
+    return this._searchPaths;
+  }
+}
 
 type GetReturnType<T> = ReturnType<Config<T>['get']>;
 type GetParameterType<T> = Parameters<Config<T>['get']>;
@@ -29,18 +40,20 @@ type PathPriorityPreset = 'cli' | 'server';
 export class OpsConfig {
   private static _instance: OpsConfig;
 
-  private config: convict.Config<unknown> | undefined;
+  private config?: convict.Config<unknown>;
 
   // default logger is just the console
   private _log: Logger = console;
 
   private enableLog = false;
 
-  private schema: string | convict.Schema<unknown> | undefined;
+  private schema?: string | convict.Schema<unknown>;
 
-  private args: Array<string> | undefined;
+  private args?: Array<string>;
 
-  private envs: { [key: string]: string } | undefined;
+  private defaultFileContent?: string;
+
+  private envs?: { [key: string]: string };
 
   private preset: PathPriorityPreset = 'cli';
 
@@ -110,6 +123,16 @@ export class OpsConfig {
     return this;
   }
 
+  public static setDefaultFileContents(contentString: string) {
+    OpsConfig.Instance.defaultFileContent = contentString;
+    return this;
+  }
+
+  public static clearDefaultFileContents() {
+    delete OpsConfig.Instance.defaultFileContent;
+    return this;
+  }
+
   public static setEnvs(envs: { [key: string]: string | undefined }) {
     const newObject = Object.keys(envs).reduce((acc: any, key) => {
       const _acc = acc;
@@ -171,10 +194,22 @@ export class OpsConfig {
       );
     }
 
-    fs.accessSync(configPath, constants.F_OK);
-    OpsConfig.Instance.config.loadFile(configPath);
-
-    OpsConfig.Instance.config.validate({ allowed: 'strict' });
+    try {
+      fs.accessSync(configPath, constants.F_OK);
+      OpsConfig.Instance.config.loadFile(configPath);
+      OpsConfig.Instance.config.validate({ allowed: 'strict' });
+    } catch (error) {
+      if (OpsConfig.Instance.defaultFileContent !== undefined) {
+        fsextra.outputFileSync(
+          configPath,
+          OpsConfig.Instance.defaultFileContent,
+        );
+        OpsConfig.Instance.config.loadFile(configPath);
+        OpsConfig.Instance.config.validate({ allowed: 'strict' });
+      } else {
+        throw error;
+      }
+    }
   }
 
   public static printConfigPathPriority() {
@@ -252,12 +287,33 @@ export class OpsConfig {
     const [configPath] = OpsConfig.Instance.configPathPriority.generateSync();
 
     if (!configPath) {
-      throw new Error('could not find ' + configArg);
+      if (OpsConfig.Instance.defaultFileContent !== undefined) {
+        const generatePath = OpsConfig.Instance.configPathPriority
+          .printPriorities()
+          .find((path) => path.absolute && path.conditionPass)?.description;
+        if (generatePath) {
+          fsextra.outputFileSync(
+            generatePath,
+            OpsConfig.Instance.defaultFileContent,
+          );
+          OpsConfig.Instance.config.loadFile(generatePath);
+          OpsConfig.Instance.config.validate({ allowed: 'strict' });
+        } else {
+          throw new FileNotFoundError(
+            OpsConfig.Instance.configPathPriority.printPriorities(),
+            'Path Priority has no absolute path with passing conditions',
+          );
+        }
+      } else {
+        throw new FileNotFoundError(
+          OpsConfig.Instance.configPathPriority.printPriorities(),
+          'Could not find ' + configArg,
+        );
+      }
+    } else {
+      OpsConfig.Instance.config.loadFile(configPath);
+      OpsConfig.Instance.config.validate({ allowed: 'strict' });
     }
-
-    OpsConfig.Instance.config.loadFile(configPath);
-    // Perform validation
-    OpsConfig.Instance.config.validate({ allowed: 'strict' });
   }
 
   public static usePriorityPreset(preset: PathPriorityPreset) {

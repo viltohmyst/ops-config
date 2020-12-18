@@ -1,4 +1,4 @@
-import { OpsConfig } from './index';
+import { FileNotFoundError, OpsConfig } from './index';
 import tempy from 'tempy';
 import fs from 'fs';
 import * as root from 'app-root-path';
@@ -179,6 +179,7 @@ describe('PathPriorityBuilder', () => {
       OpsConfig.loadFromPathPriority('test/config.yaml', 'test/.env');
       expect(OpsConfig.get('port')).toEqual(8080);
       expect(OpsConfig.get('db.host')).toEqual('dotenv');
+      OpsConfig.clearArgs().clearEnvs();
     });
 
     it('using server preset, should successfully load file if exists', () => {
@@ -192,6 +193,7 @@ describe('PathPriorityBuilder', () => {
       OpsConfig.loadFromPathPriority('test/config.yaml', 'test/.env');
       expect(OpsConfig.get('port')).toEqual(8080);
       expect(OpsConfig.get('db.host')).toEqual('dotenv');
+      OpsConfig.clearArgs().clearEnvs();
     });
 
     it('using custom Path Priority, should successfully load file if exists', () => {
@@ -210,15 +212,19 @@ describe('PathPriorityBuilder', () => {
       OpsConfig.loadFromPathPriority(customPathPriority, customDotenv);
       expect(OpsConfig.get('port')).toEqual(8080);
       expect(OpsConfig.get('db.host')).toEqual('dotenv');
+      OpsConfig.clearArgs().clearEnvs();
     });
 
     it('should throw error if config not found', () => {
       process.env.PORT = '8080';
       process.env.NODE_ENV = 'development';
-      OpsConfig.init(schema);
+      OpsConfig.init(schema, undefined, { PORT: '2020' });
       const customPathPriority = new PathPriorityBuilderSync()
         .findPaths('testnot/config.yaml')
         .appRoot();
+
+      expect(OpsConfig.get('port')).toEqual(2020);
+      expect(OpsConfig.get('ip')).toEqual('127.0.0.1');
 
       try {
         OpsConfig.loadFromFile('testnot/config.yaml');
@@ -231,6 +237,10 @@ describe('PathPriorityBuilder', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(Error);
       }
+
+      expect(OpsConfig.get('port')).toEqual(2020);
+      expect(OpsConfig.get('ip')).toEqual('127.0.0.1');
+      OpsConfig.clearArgs().clearEnvs();
     });
 
     it('should throw error if .env not found', () => {
@@ -255,6 +265,81 @@ describe('PathPriorityBuilder', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(Error);
       }
+      OpsConfig.clearArgs().clearEnvs();
+    });
+
+    it('should create config if not found and default content set', () => {
+      process.env.PORT = '8080';
+      process.env.NODE_ENV = 'development';
+      OpsConfig.init(schema);
+      const customPathPriority = new PathPriorityBuilderSync()
+        .findPaths('test/generatedpriority.yaml')
+        .appRoot();
+      OpsConfig.setDefaultFileContents('');
+
+      try {
+        OpsConfig.loadFromFile('test/generatedfile0.yaml');
+      } catch (error) {
+        expect(error).toBeDefined();
+      }
+
+      expect(OpsConfig.get('port')).toEqual(8080);
+      expect(OpsConfig.get('ip')).toEqual('127.0.0.1');
+      expect(OpsConfig.get('db.name')).toEqual('users');
+
+      OpsConfig.setDefaultFileContents(
+        'env: development\nip: 127.0.0.2\nport: 1234\ndb:\n  host: config1\n  name: users1',
+      );
+
+      try {
+        OpsConfig.loadFromFile('test/generatedfile.yaml');
+      } catch (error) {
+        expect(error).toBeDefined();
+      }
+      expect(OpsConfig.get('ip')).toEqual('127.0.0.2');
+
+      OpsConfig.setDefaultFileContents(
+        'env: development\nip: 127.0.0.3\nport: 1234\ndb:\n  host: config1\n  name: users1',
+      );
+      try {
+        OpsConfig.loadFromPathPriority(customPathPriority);
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+      }
+
+      expect(OpsConfig.get('ip')).toEqual('127.0.0.3');
+      expect(OpsConfig.get('db.name')).toEqual('users1');
+
+      try {
+        fs.accessSync(root.path + '/test/generatedfile0.yaml');
+        fs.accessSync(root.path + '/test/generatedfile.yaml');
+        fs.accessSync(root.path + '/test/generatedpriority.yaml');
+      } catch (error) {
+        expect(error).toBeUndefined();
+      }
+
+      fs.unlinkSync(root.path + '/test/generatedfile0.yaml');
+      fs.unlinkSync(root.path + '/test/generatedfile.yaml');
+      fs.unlinkSync(root.path + '/test/generatedpriority.yaml');
+    });
+
+    it('should throw error if default content set but path priority has not absolute and passing conditional', () => {
+      process.env.PORT = '8080';
+      process.env.NODE_ENV = 'development';
+      OpsConfig.init(schema, undefined, { PORT: '2020' });
+      const customPathPriority = new PathPriorityBuilderSync()
+        .findPaths('test/generatedpriority.yaml')
+        .findWithGlob();
+      OpsConfig.setDefaultFileContents('');
+
+      try {
+        OpsConfig.loadFromPathPriority(customPathPriority);
+      } catch (error) {
+        expect(error).toBeInstanceOf(FileNotFoundError);
+      }
+
+      expect(OpsConfig.get('port')).toEqual(2020);
+      expect(OpsConfig.get('ip')).toEqual('127.0.0.1');
     });
   });
 });
