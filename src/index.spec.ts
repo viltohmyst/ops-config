@@ -104,6 +104,13 @@ describe('PathPriorityBuilder', () => {
       OpsConfig.loadFromFile(configPath);
       expect(OpsConfig.get('port')).toEqual(6060);
     });
+    it('should use new value if set', () => {
+      process.env.PORT = '6060';
+      OpsConfig.init(schema);
+      OpsConfig.loadFromFile(configPath);
+      OpsConfig.set('port', 5353);
+      expect(OpsConfig.get('port')).toEqual(5353);
+    });
     it('should use dotenv value before default and after env', () => {
       process.env.PORT = '6060';
       OpsConfig.init(schema);

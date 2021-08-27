@@ -26,6 +26,9 @@ export class FileNotFoundError extends Error {
 type GetReturnType<T> = ReturnType<Config<T>['get']>;
 type GetParameterType<T> = Parameters<Config<T>['get']>;
 
+type SetReturnType<T> = ReturnType<Config<T>['set']>;
+type SetParameterType<T> = Parameters<Config<T>['set']>;
+
 type LogFunction = (...args: Array<any>) => void;
 
 interface Logger {
@@ -329,6 +332,17 @@ export class OpsConfig {
     } else {
       const errorMessage =
         'setSchema(schema) and init() must first be called before using a get(key) method';
+      OpsConfig.log.error(errorMessage);
+      throw new Error(errorMessage);
+    }
+  }
+
+  public static set(name: string, value: any) {
+    if (OpsConfig.Instance.config) {
+      return OpsConfig.Instance.config.set(name, value);
+    } else {
+      const errorMessage =
+        'setSchema(schema) and init() must first be called before using a set(key) method';
       OpsConfig.log.error(errorMessage);
       throw new Error(errorMessage);
     }
