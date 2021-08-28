@@ -98,6 +98,14 @@ describe('PathPriorityBuilder', () => {
       expect(OpsConfig.get('port')).toEqual(8080);
       expect(OpsConfig.get('db').name).toEqual('users');
     });
+    it('should merge with load JSON', () => {
+      OpsConfig.setSchema(schema).init();
+      OpsConfig.loadFromFile(configPath);
+      OpsConfig.load({ merged: { nested: 'yes' } });
+      expect(OpsConfig.get('port')).toEqual(8080);
+      expect(OpsConfig.get('db').name).toEqual('users');
+      expect(OpsConfig.get('merged').nested).toEqual('yes');
+    });
     it('should use env value before default', () => {
       process.env.PORT = '6060';
       OpsConfig.init(schema);

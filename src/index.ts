@@ -324,25 +324,34 @@ export class OpsConfig {
     return this;
   }
 
-  public static get<T>(
-    ...args: GetParameterType<T>
-  ): GetReturnType<T> | any | never {
+  public static get get() {
     if (OpsConfig.Instance.config) {
-      return OpsConfig.Instance.config.get(...args);
+      return OpsConfig.Instance.config.get.bind(OpsConfig.Instance.config);
     } else {
       const errorMessage =
-        'setSchema(schema) and init() must first be called before using a get(key) method';
+        'setSchema(schema) and init() must first be called before using a get(key?) method';
       OpsConfig.log.error(errorMessage);
       throw new Error(errorMessage);
     }
   }
 
-  public static set(name: string, value: any) {
+  public static get set() {
     if (OpsConfig.Instance.config) {
-      return OpsConfig.Instance.config.set(name, value);
+      return OpsConfig.Instance.config.set.bind(OpsConfig.Instance.config);
     } else {
       const errorMessage =
-        'setSchema(schema) and init() must first be called before using a set(key) method';
+        'setSchema(schema) and init() must first be called before using a set(name, key) method';
+      OpsConfig.log.error(errorMessage);
+      throw new Error(errorMessage);
+    }
+  }
+
+  public static get load() {
+    if (OpsConfig.Instance.config) {
+      return OpsConfig.Instance.config.load.bind(OpsConfig.Instance.config);
+    } else {
+      const errorMessage =
+        'setSchema(schema) and init() must first be called before using a load(JSON) method';
       OpsConfig.log.error(errorMessage);
       throw new Error(errorMessage);
     }
