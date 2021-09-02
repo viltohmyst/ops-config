@@ -60,7 +60,7 @@ export class OpsConfig {
 
   private preset: PathPriorityPreset = 'cli';
 
-  private validate: ValidationMethod = 'strict';
+  private validate = true;
 
   private configPathPriority: PathPriorityBuilderSync;
 
@@ -109,7 +109,7 @@ export class OpsConfig {
     return this;
   }
 
-  public static setValidate(validate: ValidationMethod) {
+  public static setValidate(validate: boolean) {
     OpsConfig.Instance.validate = validate;
     return this;
   }
@@ -207,9 +207,11 @@ export class OpsConfig {
     try {
       fs.accessSync(configPath, constants.F_OK);
       OpsConfig.Instance.config.loadFile(configPath);
-      OpsConfig.Instance.config.validate({
-        allowed: OpsConfig.Instance.validate,
-      });
+      if (OpsConfig.Instance.validate) {
+        OpsConfig.Instance.config.validate({
+          allowed: 'strict',
+        });
+      }
     } catch (error) {
       if (OpsConfig.Instance.defaultFileContent !== undefined) {
         fsextra.outputFileSync(
@@ -217,9 +219,11 @@ export class OpsConfig {
           OpsConfig.Instance.defaultFileContent,
         );
         OpsConfig.Instance.config.loadFile(configPath);
-        OpsConfig.Instance.config.validate({
-          allowed: OpsConfig.Instance.validate,
-        });
+        if (OpsConfig.Instance.validate) {
+          OpsConfig.Instance.config.validate({
+            allowed: 'strict',
+          });
+        }
       } else {
         throw error;
       }
@@ -311,9 +315,11 @@ export class OpsConfig {
             OpsConfig.Instance.defaultFileContent,
           );
           OpsConfig.Instance.config.loadFile(generatePath);
-          OpsConfig.Instance.config.validate({
-            allowed: OpsConfig.Instance.validate,
-          });
+          if (OpsConfig.Instance.validate) {
+            OpsConfig.Instance.config.validate({
+              allowed: 'strict',
+            });
+          }
         } else {
           throw new FileNotFoundError(
             OpsConfig.Instance.configPathPriority.printPriorities(),
@@ -328,9 +334,11 @@ export class OpsConfig {
       }
     } else {
       OpsConfig.Instance.config.loadFile(configPath);
-      OpsConfig.Instance.config.validate({
-        allowed: OpsConfig.Instance.validate,
-      });
+      if (OpsConfig.Instance.validate) {
+        OpsConfig.Instance.config.validate({
+          allowed: 'strict',
+        });
+      }
     }
   }
 
