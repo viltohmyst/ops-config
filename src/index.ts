@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/ban-types */
 import { config as dotenv } from 'dotenv';
-import convict, { Config } from 'convict';
+import convict, { Config, ValidationMethod } from 'convict';
 import yaml from 'js-yaml';
 import { PathPriorityBuilderSync, PrintFormat } from 'path-priority';
 import 'path-priority/lib/cjs/presets';
@@ -60,6 +60,8 @@ export class OpsConfig {
 
   private preset: PathPriorityPreset = 'cli';
 
+  private validate: ValidationMethod = 'strict';
+
   private configPathPriority: PathPriorityBuilderSync;
 
   private dotenvPathPriority: PathPriorityBuilderSync;
@@ -104,6 +106,11 @@ export class OpsConfig {
 
   public static setSchema(schema: string | convict.Schema<unknown>) {
     OpsConfig.Instance.schema = schema;
+    return this;
+  }
+
+  public static setValidate(validate: ValidationMethod) {
+    OpsConfig.Instance.validate = validate;
     return this;
   }
 
@@ -200,7 +207,9 @@ export class OpsConfig {
     try {
       fs.accessSync(configPath, constants.F_OK);
       OpsConfig.Instance.config.loadFile(configPath);
-      OpsConfig.Instance.config.validate({ allowed: 'strict' });
+      OpsConfig.Instance.config.validate({
+        allowed: OpsConfig.Instance.validate,
+      });
     } catch (error) {
       if (OpsConfig.Instance.defaultFileContent !== undefined) {
         fsextra.outputFileSync(
@@ -208,7 +217,9 @@ export class OpsConfig {
           OpsConfig.Instance.defaultFileContent,
         );
         OpsConfig.Instance.config.loadFile(configPath);
-        OpsConfig.Instance.config.validate({ allowed: 'strict' });
+        OpsConfig.Instance.config.validate({
+          allowed: OpsConfig.Instance.validate,
+        });
       } else {
         throw error;
       }
@@ -300,7 +311,9 @@ export class OpsConfig {
             OpsConfig.Instance.defaultFileContent,
           );
           OpsConfig.Instance.config.loadFile(generatePath);
-          OpsConfig.Instance.config.validate({ allowed: 'strict' });
+          OpsConfig.Instance.config.validate({
+            allowed: OpsConfig.Instance.validate,
+          });
         } else {
           throw new FileNotFoundError(
             OpsConfig.Instance.configPathPriority.printPriorities(),
@@ -315,7 +328,9 @@ export class OpsConfig {
       }
     } else {
       OpsConfig.Instance.config.loadFile(configPath);
-      OpsConfig.Instance.config.validate({ allowed: 'strict' });
+      OpsConfig.Instance.config.validate({
+        allowed: OpsConfig.Instance.validate,
+      });
     }
   }
 
